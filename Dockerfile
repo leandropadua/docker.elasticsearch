@@ -1,17 +1,17 @@
-# FROM ubuntu:16.04
+FROM ubuntu:16.04
 
-# # install java and ubuntu packages
-# RUN DEBIAN_FRONTEND=noninteractive \
-#     && apt-get update && apt-get install -y \
-#         wget \
-#         unzip \
-#         openjdk-8-jdk \
-#     && rm -rf /var/lib/apt/lists/*
+# install java and ubuntu packages
+RUN DEBIAN_FRONTEND=noninteractive \
+    && apt-get update && apt-get install -y \
+        wget \
+        unzip \
+        openjdk-8-jdk \
+    && rm -rf /var/lib/apt/lists/*
 
-# ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
-# ENV PATH $PATH:$JAVA_HOME/bin
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+ENV PATH $PATH:$JAVA_HOME/bin
 
-FROM openjdk:8
+# FROM openjdk:8
 
 # install gradle 3.3 as minimum specified at docs
 # https://github.com/elastic/elasticsearch/blob/v6.0.0/CONTRIBUTING.md#contributing-to-the-elasticsearch-codebase
@@ -35,6 +35,6 @@ RUN wget -q -O /tmp/elasticsearch.zip ${ELASTICSEARCH_SOURCE_ZIP_URL} \
     && cd /usr/local/src/elasticsearch/elasticsearch-${ELASTICSEARCH_VERSION}
 
 RUN cd /usr/local/src/elasticsearch/elasticsearch-${ELASTICSEARCH_VERSION} \
-    && gradle assemble --debug
+    && gradle assemble --stacktrace
 
 EXPOSE 9200
