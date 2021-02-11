@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:16.04 AS builder
 
 # install java and ubuntu packages
 RUN DEBIAN_FRONTEND=noninteractive \
@@ -6,12 +6,10 @@ RUN DEBIAN_FRONTEND=noninteractive \
         wget \
         unzip \
         openjdk-8-jdk \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 ENV PATH $PATH:$JAVA_HOME/bin
-
-# FROM openjdk:8
 
 # install gradle 3.3 as minimum specified at docs
 # https://github.com/elastic/elasticsearch/blob/v6.0.0/CONTRIBUTING.md#contributing-to-the-elasticsearch-codebase
@@ -19,7 +17,7 @@ ENV GRADLE_VERSION 3.3
 ENV GRADLE_ZIP_URL https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip
 
 RUN wget -q -O /tmp/gradle.zip ${GRADLE_ZIP_URL} \
-    && unzip -d /opt /tmp/gradle.zip \
+    && unzip -q -d /opt /tmp/gradle.zip \
     && rm -f /tmp/gradle.zip
 
 ENV GRADLE_HOME /opt/gradle-${GRADLE_VERSION}
@@ -30,11 +28,35 @@ ENV ELASTICSEARCH_VERSION 6.0.0
 ENV ELASTICSEARCH_SOURCE_ZIP_URL https://github.com/elastic/elasticsearch/archive/v${ELASTICSEARCH_VERSION}.zip
 
 RUN wget -q -O /tmp/elasticsearch.zip ${ELASTICSEARCH_SOURCE_ZIP_URL} \
-    && unzip -d /usr/local/src/elasticsearch /tmp/elasticsearch.zip\
+    && unzip -q -d /usr/local/src/elasticsearch /tmp/elasticsearch.zip\
     && rm -f /tmp/elasticsearch.zip \
     && cd /usr/local/src/elasticsearch/elasticsearch-${ELASTICSEARCH_VERSION}
 
 RUN cd /usr/local/src/elasticsearch/elasticsearch-${ELASTICSEARCH_VERSION} \
     && gradle assemble --stacktrace
 
-EXPOSE 9200
+FROM ubuntu:16.04
+
+RUN DEBIAN_FRONTEND=noninteractive \
+    && apt-get update && apt-get install -y \
+        openjdk-8-jre-headless \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+ENV PATH $PATH:$JAVA_HOME/bin
+
+COPY --from=builder /usr/local/src/elasticsearch/elasticsearch-6.0.0/distribution/tar/build/distributions/elasticsearch-6.0.0-SNAPSHOT.tar.gz /tmp/elasticsearch.tar.gz
+
+RUN groupadd --gid 1000 elasticsearch && useradd -u 1000 -g 1000 -m elasticsearch
+
+RUN tar -C /usr/share/ -xzf /tmp/elasticsearch.tar.gz \
+    && mv /usr/share/elasticsearch-6.0.0-SNAPSHOT /usr/share/elasticsearch \
+    && chown -R elasticsearch:elasticsearch /usr/share/elasticsearch \
+    && rm -f /tmp/elasticsearch.tar.gz
+
+ENV PATH /usr/share/elasticsearch/bin:$PATH
+
+USER elasticsearch
+EXPOSE 9200 9300
+
+CMD [ "/usr/share/elasticsearch/bin/elasticsearch" ]
