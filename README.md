@@ -15,10 +15,10 @@ It can't be limited or reduced due to [Gradle 3 limitation](https://github.com/g
 ## Quick start
 ```sh
 # build
-docker build -t m43_es:latest .
+docker build -t leandro_es:latest .
 
 # run (it take a minute to initialise)
-docker run --rm -it -p 9200:9200 m43_es
+docker run --rm -it -p 9200:9200 leandro_es
 
 # check container health
 curl 127.0.0.1:9200/_cluster/health
@@ -40,4 +40,4 @@ docker pull leandropadua/elasticsearch:6.0.0
 ```
 
 ## limitations
-For simplicity, xpack plugin is disabled by default and should be enabled in the entrypoint, if that is needed.
+For simplicity, no plugins are loaded by default, including xpack. Any plugin should be enabled in the entrypoint, if that is needed.
