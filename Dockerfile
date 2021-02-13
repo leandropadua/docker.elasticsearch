@@ -69,6 +69,8 @@ RUN groupadd --gid 1000 elasticsearch \
  && useradd --uid 1000 --gid 1000 --groups 0 --home /usr/share/elasticsearch elasticsearch
 
 COPY --from=builder --chown=1000:0 /usr/share/elasticsearch /usr/share/elasticsearch
+
+# bootstrap basic config to allow single node by default
 COPY --chown=1000:0 config/elasticsearch.yml /usr/share/elasticsearch/config
 
 ENV PATH /usr/share/elasticsearch/bin:$PATH
