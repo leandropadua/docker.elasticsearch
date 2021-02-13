@@ -1,4 +1,6 @@
 # docker.elasticsearch
+![build status](https://github.com/leandropadua/docker.elasticsearch/workflows/ci/badge.svg)
+
 This repository can be used to build an Elasticsearch docker image from the source code.
 
 Versions used:
@@ -36,3 +38,6 @@ This repository is automated by github actions and any push to main would publis
 ```sh
 docker pull leandropadua/elasticsearch:6.0.0
 ```
+
+## limitations
+For simplicity, xpack plugin is disabled by default and should be enabled in the entrypoint, if that is needed.
